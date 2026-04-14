@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Read(//Users/asumasora/Desktop/projects/**)",
+      "Bash(npx create-next-app@latest contest_app --typescript --tailwind --app --src-dir --no-turbopack --eslint --yes)"
+    ]
+  }
+}
