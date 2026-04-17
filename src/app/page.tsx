@@ -29,7 +29,12 @@ async function getOpenEvents(): Promise<Event[]> {
 }
 
 export default async function HomePage() {
-  const events = await getOpenEvents();
+  let events: Event[] = [];
+  try {
+    events = await getOpenEvents();
+  } catch (error) {
+    console.error("Failed to fetch events:", error);
+  }
 
   return (
     <div className="min-h-screen bg-white">

@@ -10,11 +10,18 @@ function getAdminApp(): App {
     _app = getApps()[0];
     return _app!;
   }
+
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("FIREBASE_PRIVATE_KEY is not set");
+  }
+
   _app = initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      // Vercel stores env vars with literal \n — convert to real newlines
+      privateKey: privateKey.replace(/\\n/g, "\n"),
     }),
   });
   return _app!;
