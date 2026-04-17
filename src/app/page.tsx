@@ -1,64 +1,76 @@
-import Image from "next/image";
+export const dynamic = "force-dynamic";
 
-export default function Home() {
+import { adminDb } from "@/lib/firebase/admin";
+import Link from "next/link";
+import type { Event } from "@/types";
+
+async function getOpenEvents(): Promise<Event[]> {
+  const snapshot = await adminDb
+    .collection("events")
+    .where("isOpen", "==", true)
+    .orderBy("createdAt", "desc")
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      title: data.title,
+      description: data.description ?? "",
+      organizer: data.organizer ?? "",
+      venue: data.venue ?? "",
+      schedule: data.schedule ?? [],
+      choices: data.choices,
+      isOpen: data.isOpen,
+      createdAt: data.createdAt?.toDate().toISOString() ?? "",
+      closedAt: data.closedAt?.toDate().toISOString() ?? null,
+    };
+  });
+}
+
+export default async function HomePage() {
+  const events = await getOpenEvents();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-gray-100">
+        <div className="max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
+          <span className="font-semibold text-gray-900">投票イベント</span>
+          <Link href="/admin/login" className="text-xs text-gray-400 hover:text-gray-600">
+            管理者
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      <main className="max-w-lg mx-auto px-5 py-8">
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
+          開催中の投票
+        </h2>
+
+        {events.length === 0 ? (
+          <p className="text-gray-400 text-sm text-center py-16">現在開催中の投票はありません</p>
+        ) : (
+          <div className="space-y-3">
+            {events.map((event) => (
+              <Link
+                key={event.id}
+                href={`/event/${event.id}`}
+                className="block border border-gray-100 rounded-xl p-4 hover:border-gray-300 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{event.title}</p>
+                    {event.description && (
+                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{event.description}</p>
+                    )}
+                    <p className="text-xs text-gray-300 mt-1">{event.choices.length}つの選択肢</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-gray-400">→</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

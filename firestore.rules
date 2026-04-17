@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // イベント: 公開読み取り可、書き込みはAdmin SDKのみ
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 投票: クライアントから直接アクセス不可（全てAPIルート経由）
+    match /votes/{voteId} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}
